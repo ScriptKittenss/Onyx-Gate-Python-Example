@@ -1,120 +1,77 @@
 <div align="center">
 
-# ⚡ Onyx Gate — Python Integration Example
+# Onyx Gate — Python SDK Example
 
-[![Language](https://img.shields.io/badge/Language-Python%203.8+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![Requests](https://img.shields.io/badge/HTTP-Requests-2B5B84?style=for-the-badge)](https://pypi.org/project/requests/)
-[![Platform](https://img.shields.io/badge/Platform-Cross--Platform-blue?style=for-the-badge)](https://python.org)
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
-
-<br/>
-
-**A lightweight, cross-platform Python SDK and CLI loader for [Onyx Gate](https://auth.script-kittens.com).**
+**A lightweight Python SDK and CLI loader for [Onyx Gate](https://auth.script-kittens.com).**
 
 </div>
 
 ---
 
-## 🚀 Overview
+## Files
 
-This repository provides a clean Python integration demonstrating how to protect CLI tools, automation scripts, and bots with Onyx Gate license verification and HWID locking.
+| File | What it is |
+| :--- | :--- |
+| `skauth.py` | Drop-in SDK module — copy it into your project |
+| `loader.py` | Working CLI loader example (login / register menu) |
+| `requirements.txt` | `requests` |
 
-### ✨ Features
-- ⚡ **Minimal Footprint** — Only requires the standard `requests` package.
-- 🛡️ **Cross-Platform HWID** — Automatically generates machine identifiers on Windows, Linux, and macOS.
-- 🔑 **Session Management** — Supports login, registration, key redemption, and tier validation.
-- 🎨 **Ready CLI Loader** — Interactive console loader example with formatted outputs.
+## Quick start
 
----
-
-## 📂 Project Structure
-
-```text
-├── skauth.py            # Drop-in Python SDK module
-├── loader.py            # CLI loader & interactive prompt example
-├── requirements.txt     # Python dependencies (requests)
-└── README.md            # Documentation
+```bash
+git clone https://github.com/ScriptKittenss/Onyx-Gate-Python-Example.git
+cd Onyx-Gate-Python-Example
+pip install -r requirements.txt
 ```
 
----
+Open `loader.py`, set your `APP_ID` (from the Onyx Gate dashboard), then:
 
-## ⚡ Quick Start
+```bash
+python loader.py
+```
 
-### 1. Requirements
-- Python 3.8 or newer
-- `pip` package manager
-
-### 2. Setup
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/fegrial/Onyx-Gate-Python-Example.git
-   cd Onyx-Gate-Python-Example
-   ```
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Open `loader.py` and set your `APP_ID`:
-   ```python
-   APP_ID = "YOUR_APP_ID_HERE"
-   ```
-4. Run the loader:
-   ```bash
-   python loader.py
-   ```
-
----
-
-## 💻 Code Integration
-
-Add Onyx Gate protection to your script in seconds:
+## Use it in your own script
 
 ```python
 from skauth import SKAuth
 
-# 1. Initialize client
 auth = SKAuth(app_id="YOUR_APP_ID", version="1.0")
 
-# 2. Authenticate
-res = auth.login(username="user123", password="password123")
+res = auth.login("username", "password")
+if not res.get("ok"):
+    print(f"Login failed: {res.get('message')}")
+    exit(1)
 
-if res.get("ok"):
-    user_data = res.get("data", {})
-    print(f"[+] Login successful! Welcome, {user_data.get('username')}")
-    print(f"[+] Subscription plan: {user_data.get('plan')}")
+print(f"Welcome {auth.get_username()}! Plan: {auth.get_plan()}")
 
-    # 3. Check subscription gate
-    if auth.is_paid():
-        print("[+] Premium features unlocked!")
-        # Run protected logic here
-    else:
-        print("[*] Running standard tier...")
-else:
-    print(f"[-] Authentication failed: {res.get('message')}")
+if auth.is_paid():
+    print("Premium features unlocked.")
 ```
 
-### Key Redemption
-```python
-res = auth.redeem_key("ONYX-XXXX-XXXX-XXXX")
-if res.get("ok"):
-    print("[+] Key redeemed successfully!")
-```
-
----
-
-## 🛡️ API Reference
+## API reference
 
 | Method | Description |
 | :--- | :--- |
-| `SKAuth(app_id, version)` | Initializes the auth client instance. |
-| `auth.login(user, password)` | Authenticates user and verifies machine HWID. |
-| `auth.register(user, pass, email, key)` | Registers a new account. |
-| `auth.redeem_key(key)` | Activates or upgrades plan via license key. |
-| `auth.is_paid()` | Returns `True` if active session is on a paid plan. |
-| `auth.get_hwid()` | Calculates hardware identifier string. |
+| `SKAuth(app_id, version="1.0")` | Create the client. Computes the machine HWID. |
+| `login(username, password)` | Authenticate. On success `auth.user` holds `username`, `plan`, `expires`, `email`, `apiKey`. On failure show `res["message"]` as-is. |
+| `register(username, password, email="", license_key="")` | Create an account. `license_key` is optional. |
+| `redeem(username, license_key)` | Apply a license key to an existing account. |
+| `validate()` | Heartbeat — call every few minutes. Kicks banned/expired users, syncs plan changes. Needs a login first. |
+| `get_var(name)` | Read a runtime variable (dashboard → Settings → Variables). Returns the value or `None`. |
+| `download_file(file_id, save_path)` | Download a file from the Runtime Vault (dashboard → Files). Returns `True` on success. Needs a login first. |
+| `is_paid()` | `True` when the plan isn't `free` (starter, pro, …). |
+| `get_hwid()` | The machine HWID (SHA256, 32 hex chars). Same machine gives the same HWID in the C# and C++ SDKs. |
+| `get_username()` / `get_plan()` / `get_expires()` | Shortcuts into `auth.user`. |
+
+## Notes
+
+- The App ID is public. Never put your app secret, a password, or a license key in source code.
+- `version` must match the version set in your dashboard, or login returns "Update required".
+- Logins are rate limited (15/min per IP), registrations 5 per 5 minutes per IP.
+- Full endpoint docs: https://auth.script-kittens.com → Documentation.
 
 ---
 
 <div align="center">
-<sub>Powered by <b>Onyx Gate</b> • Maintained by <a href="https://github.com/fegrial">fegrial</a></sub>
+<sub>Powered by <b>Onyx Gate</b> • <a href="https://github.com/ScriptKittenss">ScriptKittenss</a></sub>
 </div>
