@@ -93,7 +93,7 @@ def require_paid(auth):
     """Call this at startup if your ENTIRE tool requires a paid plan."""
     if not is_paid(auth):
         print("  You need a paid plan for this tool.")
-        print("  Buy at: discord.gg/tWwUSPh5GT")
+        print("  Buy at: discord.gg/wYZeuJQNCy")
         input("  Press Enter to exit...")
         sys.exit(1)
 
@@ -154,7 +154,7 @@ def main():
             if is_paid(auth):
                 print("  Running premium feature 2...")
             else:
-                print("  Upgrade required. Buy at discord.gg/tWwUSPh5GT")
+                print("  Upgrade required. Buy at discord.gg/wYZeuJQNCy")
         elif choice == "3":
             sys.exit(0)
 
